@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vision Uncrossable V0.3.9 (Ajustes Finos)</title>
+    <link rel="preload" href="assets/readson.woff2" as="font" type="font/woff2" crossorigin>
+    <style>
+        @font-face {
+            font-family: "Readson";
+            src: url("assets/readson.woff2") format("woff2"),
+                 url("assets/readson.woff") format("woff"),
+                 url("assets/readson.otf") format("opentype");
+        }
+        body { margin: 0; background: #111; overflow: hidden; }
+        canvas { display: block; margin: auto; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fontfaceobserver/2.3.0/fontfaceobserver.standalone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+</head>
+<body>
+<script>
+(async () => {
+    try {
+        await new FontFaceObserver('Readson').load(null, 7000);
+    } finally {
+        startGame();
+    }
+})();
+
+// ===== VARIABLES GLOBALES =================================================
+var SHOW_WIN_BANNER = false;
+var WIN_AMOUNT_TEXT = '';
+var PLAYER_BALANCE = 1000;
+var CURRENT_BET_INDEX = 4;
+
+function startGame() {
+
+// ===== CONSTANTES DEL JUEGO =============================================
+const CANVAS_W = 1080;
+const CANVAS_H = 1920;
+const GAME_AREA_H = 1450;
+const UI_AREA_H = 470;
+const STREET_WIDTH = 340; 
+const SIDEWALK_WIDTH = 400; 
+const LANE_COUNT = 25;
+const WORLD_WIDTH = SIDEWALK_WIDTH + STREET_WIDTH * (LANE_COUNT - 1);
+const GRANDPA_SCALE = 400 / 512;
+const CAR_SCALE = 1.4;
+const COIN_SCALE = 1.2;
+const BASE_MULTIPLIER = 1.9;
+const HIT_CHANCE = 0.25;
+const JUMP_HEIGHT = 360;
+const JUMP_DURATION = 400;
+const SHADOW_OFFSET = 180;
+const BET_VALUES = [0.2, 0.4, 0.6, 1, 2, 5, 10, 100, 500, 1000];
+const LANE_X = Array.from({ length: LANE_COUNT }, (_, i) =>
+    i === 0 ? SIDEWALK_WIDTH / 2 : SIDEWALK_WIDTH + (i - 1) * STREET_WIDTH + STREET_WIDTH / 2
+);
+
+class MainScene extends Phaser.Scene {
+
+    preload() {
+        const assets = ['grandpa', 'grandpadead', 'sidewalk', 'street', 'car1', 'car2', 'car3', 'pilar', 'coin'];
+        assets.forEach(key => this.load.image(key, `assets/${key}.png`));
+    }
+
+    create() {
+        this.currentLane = 0;
+        this.gameEnded = false;
+        this.pendingLose = false;
+        this.isMoving = false;
+        this.isWaitingToRestart = false;
+        this.restartTimer = null;
+        this.winBanner = null;
+        this.crashLaneIdx = null;
+        this.laneOpen = Array(LANE_COUNT).fill(true);
+        this.laneOpen[0] = false;
+        this.coins = Array(LANE_COUNT).fill(null);
+        this.playerBalance = PLAYER_BALANCE;
+        this.currentBetIndex = CURRENT_BET_INDEX;
+        this.activeBetValue = 0;
+
+        this.createWorld();
+
+        const startX = LANE_X[0];
+        const startY = GAME_AREA_H / 2;
+        this.grandpa = this.add.sprite(startX, startY, 'grandpa').setScale(GRANDPA_SCALE).setDepth(10);
+        this.shadow = this.add.ellipse(startX, startY + SHADOW_OFFSET, 130, 70, 0x000, 0.25).setDepth(5);
+
+        this.multText = this.add.text(CANVAS_W / 2, 50, 'x1.00', { fontFamily: 'Readson', fontSize: '64px', color: '#fff', stroke: '#000', strokeThickness: 3 })
+            .setOrigin(0.5).setScrollFactor(0).setDepth(100);
+
+        this.createCoins();
+        this._initCameraSystem();
+        this._initDragControls();
+        this.createUi();
+
+        this.input.keyboard.on('keydown-SPACE', () => this.jump());
+        this.carPool = this.add.group({ classType: Phaser.GameObjects.Sprite, maxSize: 40 });
+        this.carTimer = this.time.addEvent({ delay: 450, loop: true, callback: this.spawnCar, callbackScope: this });
+
+        if (SHOW_WIN_BANNER) {
+            this._createWinBanner(WIN_AMOUNT_TEXT);
+            SHOW_WIN_BANNER = false;
+            WIN_AMOUNT_TEXT = '';
+        }
+    }
+
+    update(time, delta) {
+        this._updateCamera(time, delta);
+        if (!this.gameEnded) {
+            this.shadow.x = this.grandpa.x;
+        }
+    }
+
+    jump() {
+        if (this.winBanner) this.winBanner.fadeOutFunc();
+        if (this.isWaitingToRestart) { this.skipToFade(); return; }
+        if (this.isMoving || this.gameEnded || this.pendingLose || this.currentLane >= LANE_COUNT - 1) return;
+        
+        if (this.currentLane === 0) {
+            const currentBet = BET_VALUES[this.currentBetIndex];
+            if (currentBet > this.playerBalance) { this._showNotEnoughBalanceWarning(); return; }
+            this.playerBalance -= currentBet;
+            this.activeBetValue = currentBet;
+            this._updateBalanceDisplay();
+            this._setBetButtonsEnabled(false);
+        }
+
+        if (Math.random() < HIT_CHANCE) {
+            this.pendingLose = true;
+            this.crashLaneIdx = this.currentLane + 1;
+            this.time.delayedCall(100, () => this.spawnCrashCar(this.crashLaneIdx), null, this);
+        }
+
+        this.isMoving = true;
+        this.cameraState = 'FOLLOWING';
+        this.cameraVelocityX = 0;
+        this._setButtonEnabled(this.jumpBtn, false, true);
+        this._setButtonEnabled(this.cashBtn, false);
+
+        const from = new Phaser.Math.Vector2(this.grandpa.x, this.grandpa.y);
+        const toX = LANE_X[this.currentLane + 1];
+        const controlPoint = new Phaser.Math.Vector2((from.x + toX) / 2, from.y - JUMP_HEIGHT);
+        const curve = new Phaser.Curves.QuadraticBezier(from, controlPoint, { x: toX, y: from.y });
+        
+        const follower = { t: 0 };
+        this.tweens.add({
+            targets: follower, t: 1, duration: JUMP_DURATION, ease: 'Sine.easeInOut',
+            onUpdate: () => {
+                const p = curve.getPoint(follower.t);
+                this.grandpa.setPosition(p.x, p.y);
+                const shadowScale = Phaser.Math.Linear(1, 0.6, Math.abs(0.5 - follower.t) * 2);
+                this.shadow.setPosition(p.x, from.y + SHADOW_OFFSET).setScale(shadowScale, shadowScale * 0.7);
+            },
+            onComplete: () => this.afterLand()
+        });
+    }
+
+    afterLand() {
+        this.isMoving = false;
+        if (this.pendingLose) return;
+
+        this.currentLane++;
+
+        if (this.laneOpen[this.currentLane]) {
+            this.laneOpen[this.currentLane] = false;
+            this.collectCoin(this.currentLane);
+            this.raisePilar(this.currentLane);
+        }
+        
+        this.updateCoinHighlights();
+        this._setButtonEnabled(this.jumpBtn, true, true);
+
+        if (this.currentLane >= 1) {
+            this._setButtonEnabled(this.cashBtn, true);
+            this.cashBtn.setVisible(true);
+        }
+    }
+
+    crashGrandpa() {
+        if (this.gameEnded) return;
+        this.gameEnded = true;
+        this.carTimer.remove();
+        this._lockCameraOnGameEnd();
+        this.grandpa.setTexture('grandpadead');
+        this.updateMultiplier(0);
+        if (this.crashLaneIdx !== null) this.crashCoin(this.crashLaneIdx);
+        this.cashBtn.setVisible(false);
+        this._setButtonEnabled(this.jumpBtn, true, true);
+        this.isWaitingToRestart = true;
+        PLAYER_BALANCE = this.playerBalance;
+        this.restartTimer = this.time.delayedCall(1800, () => {
+            if (!this.isWaitingToRestart) return;
+            this.isWaitingToRestart = false;
+            // CAMBIO: Fade más rápido al perder.
+            this.cam.fadeOut(150, 0, 0, 0);
+        });
+        this.cam.on('camerafadeoutcomplete', () => this.scene.restart());
+    }
+
+    skipToFade() {
+        if (!this.isWaitingToRestart) return;
+        this.isWaitingToRestart = false;
+        if (this.restartTimer) this.restartTimer.remove();
+        // CAMBIO: Fade más rápido al skipear.
+        this.cam.fadeOut(150, 0, 0, 0);
+    }
+
+    triggerWin() {
+        if (this.gameEnded) return;
+        const multiplier = parseFloat(this.multText.text.substring(1)) || 1;
+        const winnings = this.activeBetValue * multiplier;
+        this.playerBalance += winnings;
+        SHOW_WIN_BANNER = true;
+        WIN_AMOUNT_TEXT = `$${winnings.toFixed(2)}`;
+        PLAYER_BALANCE = this.playerBalance;
+        this.carTimer.remove();
+        this.scene.restart();
+    }
+
+    createWorld() {
+        for (let i = 0, x = 0; i < LANE_COUNT; i++) {
+            const width = i ? STREET_WIDTH : SIDEWALK_WIDTH;
+            const texture = i ? 'street' : 'sidewalk';
+            this.add.image(x + width / 2, CANVAS_H / 2, texture).setDisplaySize(width, CANVAS_H);
+            x += width;
+        }
+    }
+
+    createCoins() {
+        const coinY = this.grandpa.y - 80;
+        for (let i = 1; i < LANE_COUNT; i++) {
+            const container = this.add.container(LANE_X[i], coinY).setDepth(6);
+            const sprite = this.add.sprite(0, 0, 'coin').setScale(COIN_SCALE);
+            const label = this.add.text(0, -5, `x${(BASE_MULTIPLIER * i).toFixed(2)}`, {
+                fontFamily: 'Readson', fontSize: '42px', color: '#fff', stroke: '#000', strokeThickness: 3
+            }).setOrigin(0.5);
+            container.add([sprite, label]);
+            this.tweens.add({ targets: container, scale: 1.06, yoyo: true, repeat: -1, duration: 800, ease: 'Sine.easeInOut' });
+            this.coins[i] = { container, sprite };
+        }
+        this.updateCoinHighlights();
+    }
+
+    createUi() {
+        const uiY = GAME_AREA_H + (UI_AREA_H / 2);
+        const uiTextStyle = { fontFamily: 'Readson', fontSize: '42px', color: '#fff', stroke: '#000', strokeThickness: 2 };
+        this.add.text(60, uiY - 140, 'BALANCE', uiTextStyle).setOrigin(0, 0.5).setScrollFactor(0).setDepth(100);
+        this.balanceText = this.add.text(60, uiY - 95, '$0.00', uiTextStyle).setOrigin(0, 0.5).setScrollFactor(0).setDepth(100);
+        const jumpBtnColors = { bg: 0x006400, stroke: 0x98FB98, hover: 0x008000 };
+        const jumpBtnStyle = { fontFamily: 'Readson', fontSize: '56px', color: '#ffffff' };
+        this.jumpBtn = this._createButton(CANVAS_W / 2, uiY + 80, 'JUMP', 300, 110, jumpBtnColors, jumpBtnStyle, () => this.jump());
+        this.jumpBtnBreathingTween = this.tweens.add({ targets: this.jumpBtn, scale: 1.05, duration: 1500, ease: 'Sine.easeInOut', yoyo: true, repeat: -1 });
+        const cashBtnColors = { bg: 0x333333, stroke: 0xeeeeee, hover: 0x555555 };
+        const cashBtnStyle = { fontFamily: 'Readson', fontSize: '38px', color: '#ffffff', align: 'center', lineSpacing: 5 };
+        this.cashBtn = this._createButton(CANVAS_W / 2, uiY - 50, '💰\nCASH OUT', 220, 100, cashBtnColors, cashBtnStyle, () => this.triggerWin());
+        this.cashBtn.setVisible(false);
+        const betTextX = CANVAS_W - 170;
+        const betBtnColors = { bg: 0x4a4a4a, stroke: 0xcccccc, hover: 0x6a6a6a };
+        const betBtnStyle = { fontFamily: 'Readson', fontSize: '60px', color: '#fff' };
+        this.add.text(betTextX, uiY - 140, 'BET', uiTextStyle).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(100);
+        this.betSizeText = this.add.text(betTextX, uiY - 95, '$0.00', uiTextStyle).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(100);
+        this.betDownBtn = this._createButton(betTextX - 120, uiY - 95, '-', 80, 80, betBtnColors, betBtnStyle, () => this._decreaseBet());
+        this.betUpBtn = this._createButton(betTextX + 120, uiY - 95, '+', 80, 80, betBtnColors, betBtnStyle, () => this._increaseBet());
+        this._updateBalanceDisplay();
+        this._updateBetDisplay();
+    }
+
+    _createButton(x, y, text, w, h, colors, fontStyle, callback) {
+        const container = this.add.container(x, y).setScrollFactor(0).setDepth(100);
+        const background = this.add.graphics();
+        background.fillStyle(colors.bg, 1).lineStyle(4, colors.stroke, 1);
+        background.fillRoundedRect(-w / 2, -h / 2, w, h, 24).strokeRoundedRect(-w / 2, -h / 2, w, h, 24);
+        const label = this.add.text(0, 0, text, fontStyle).setOrigin(0.5);
+        container.add([background, label]).setSize(w, h).setInteractive({ useHandCursor: true });
+        container.on('pointerover', () => background.fillStyle(colors.hover, 1).fillRoundedRect(-w / 2, -h / 2, w, h, 24));
+        container.on('pointerout', () => background.fillStyle(colors.bg, 1).fillRoundedRect(-w / 2, -h / 2, w, h, 24));
+        container.on('pointerdown', () => container.setScale(0.95));
+        container.on('pointerup', () => { container.setScale(1); if (typeof callback === 'function') callback(); });
+        return container;
+    }
+
+    _updateBalanceDisplay() { this.balanceText.setText(`$${this.playerBalance.toFixed(2)}`); }
+
+    _updateBetDisplay() {
+        const betValue = BET_VALUES[this.currentBetIndex];
+        this.betSizeText.setText(`$${betValue.toFixed(2)}`);
+        const canDecrease = this.currentBetIndex > 0;
+        this.betDownBtn.setAlpha(canDecrease ? 1 : 0.5).setInteractive(canDecrease);
+        const canIncrease = this.currentBetIndex < BET_VALUES.length - 1;
+        this.betUpBtn.setAlpha(canIncrease ? 1 : 0.5).setInteractive(canIncrease);
+        CURRENT_BET_INDEX = this.currentBetIndex;
+    }
+
+    _increaseBet() {
+        if (this.currentLane > 0 || this.currentBetIndex >= BET_VALUES.length - 1) return;
+        this.currentBetIndex++;
+        this._updateBetDisplay();
+    }
+
+    _decreaseBet() {
+        if (this.currentLane > 0 || this.currentBetIndex <= 0) return;
+        this.currentBetIndex--;
+        this._updateBetDisplay();
+    }
+
+    _setBetButtonsEnabled(isEnabled) {
+        this.betDownBtn.disableInteractive().setAlpha(0.5);
+        this.betUpBtn.disableInteractive().setAlpha(0.5);
+    }
+
+    _setButtonEnabled(button, isEnabled, isBreathing = false) {
+        button.setAlpha(isEnabled ? 1 : 0.5).setInteractive(isEnabled ? { useHandCursor: true } : false);
+        if (isBreathing) {
+            if (isEnabled && this.jumpBtnBreathingTween?.isPlaying() === false) this.jumpBtnBreathingTween.resume();
+            else if (!isEnabled && this.jumpBtnBreathingTween?.isPlaying() === true) this.jumpBtnBreathingTween.pause();
+        }
+    }
+
+    _createWinBanner(amountText) {
+        const container = this.add.container(CANVAS_W / 2, CANVAS_H / 2).setScrollFactor(0).setDepth(200);
+        const bannerWidth = 1000, bannerHeight = 150;
+        const bg = this.add.graphics().fillStyle(0x008f39, 0.75).fillRoundedRect(-bannerWidth / 2, -bannerHeight / 2, bannerWidth, bannerHeight, 30);
+        const winText = this.add.text(0, 0, `COLLECT ${amountText}`, { fontFamily: 'Readson', fontSize: '80px', color: '#ffffff', stroke: '#000000', strokeThickness: 5, shadow: { color: '#000000', fill: true, blur: 10, offsetY: 5 } }).setOrigin(0.5);
+        container.add([bg, winText]);
+        const fadeOutBanner = () => {
+            if (!this.winBanner) return;
+            const bannerToFade = this.winBanner;
+            this.winBanner = null;
+            if (bannerToFade.timer) bannerToFade.timer.remove();
+            this.tweens.add({ targets: bannerToFade.container, alpha: 0, duration: 100, onComplete: () => bannerToFade.container.destroy() });
+        };
+        const bannerTimer = this.time.delayedCall(1500, fadeOutBanner);
+        this.winBanner = { container, timer: bannerTimer, fadeOutFunc: fadeOutBanner };
+    }
+
+    _showNotEnoughBalanceWarning() {
+        const warningText = this.add.text(CANVAS_W / 2, CANVAS_H / 2, 'Not Enough Balance', { fontFamily: 'Readson', fontSize: '70px', color: '#ff4d4d', stroke: '#000', strokeThickness: 4, align: 'center' }).setOrigin(0.5).setScrollFactor(0).setDepth(300).setAlpha(0);
+        this.tweens.add({ targets: warningText, alpha: { from: 0, to: 1 }, scale: { from: 0.8, to: 1 }, duration: 300, yoyo: true, hold: 1200, ease: 'Power1', onComplete: () => warningText.destroy() });
+    }
+
+    _initCameraSystem() {
+        this.cam = this.cameras.main;
+        this.cam.setBounds(0, 0, WORLD_WIDTH, CANVAS_H);
+        this.cameraFollowOffset = 250;
+        this.cameraState = 'FOLLOWING';
+        this.cameraVelocityX = 0;
+        this.DRAG_SENSITIVITY = 0.6;
+        this.CAMERA_DAMPING = 0.85;
+        this.CAMERA_LERP_SPEED = 0.3;
+    }
+
+    _initDragControls() {
+        this.isDragging = false;
+        let dragStartScrollX = 0;
+        let dragStartPointerX = 0;
+        this.input.on('pointerdown', (pointer, gameObjectsClicked) => {
+            if (gameObjectsClicked.length > 0 || this.cameraState === 'LOCKED' || this.isMoving || this.gameEnded) return;
+            this.cameraState = 'DRAGGING';
+            this.isDragging = true;
+            this.cameraVelocityX = 0;
+            dragStartScrollX = this.cam.scrollX;
+            dragStartPointerX = pointer.x;
+        });
+        this.input.on('pointermove', pointer => {
+            if (!this.isDragging || this.cameraState !== 'DRAGGING') return;
+            const dragDelta = pointer.x - dragStartPointerX;
+            this.cam.scrollX = dragStartScrollX - (dragDelta * this.DRAG_SENSITIVITY);
+            this.cameraVelocityX = -pointer.velocity.x * this.DRAG_SENSITIVITY;
+        });
+        const onPointerUp = () => { if (this.isDragging) { this.isDragging = false; this.cameraState = 'IDLE_MANUAL'; }};
+        this.input.on('pointerup', onPointerUp);
+        this.input.on('pointerupoutside', onPointerUp);
+    }
+
+    _updateCamera(time, delta) {
+        switch (this.cameraState) {
+            case 'FOLLOWING':
+                const targetScrollX = this.grandpa.x - this.cameraFollowOffset;
+                const lerpAmount = 1 - Math.pow(1 - this.CAMERA_LERP_SPEED, delta / 16.67);
+                this.cam.scrollX = Phaser.Math.Linear(this.cam.scrollX, targetScrollX, lerpAmount);
+                break;
+            case 'IDLE_MANUAL':
+                this.cam.scrollX += this.cameraVelocityX * (delta / 16.67);
+                this.cameraVelocityX *= Math.pow(this.CAMERA_DAMPING, delta / 16.67);
+                if (Math.abs(this.cameraVelocityX) < 0.5) this.cameraVelocityX = 0;
+                break;
+        }
+        this.cam.scrollX = Phaser.Math.Clamp(this.cam.scrollX, 0, WORLD_WIDTH - CANVAS_W);
+    }
+
+    _lockCameraOnGameEnd() {
+        this.cameraState = 'LOCKED';
+        this.cameraVelocityX = 0;
+        const targetX = this.grandpa.x - CANVAS_W / 2;
+        this.tweens.add({ targets: this.cam, scrollX: targetX, duration: 600, ease: 'Cubic.easeOut' });
+    }
+
+    updateMultiplier(value) { this.multText.setText('x' + value.toFixed(2)); }
+
+    updateCoinHighlights() {
+        const nextLane = this.currentLane + 1;
+        for (let i = 1; i < this.coins.length; i++) {
+            const coin = this.coins[i];
+            if (!coin) continue;
+            if (nextLane === i) coin.sprite.clearTint();
+            else coin.sprite.setTint(0x777777);
+        }
+    }
+
+    raisePilar(index) {
+        const pilar = this.add.image(LANE_X[index], this.grandpa.y - 80, 'pilar').setDepth(7);
+        this.tweens.add({ targets: pilar, y: pilar.y - 40, duration: 260, ease: 'Back.easeOut' });
+    }
+
+    collectCoin(index) {
+        const coinData = this.coins[index];
+        if (!coinData) return;
+
+        const startPos = { x: coinData.container.x, y: coinData.container.y };
+        const multiplierValue = (BASE_MULTIPLIER * index).toFixed(2);
+        const labelStyle = { fontFamily: 'Readson', fontSize: '42px', color: '#fff', stroke: '#000', strokeThickness: 3 };
+        
+        this.tweens.killTweensOf(coinData.container);
+        coinData.container.destroy();
+        this.coins[index] = null;
+
+        // --- Animación 1: Moneda girando ---
+        // CAMBIO: La moneda ahora comienza 50px más arriba.
+        const flyingCoin = this.add.sprite(startPos.x, startPos.y - 50, 'coin').setScale(COIN_SCALE * 0.8).setDepth(12);
+        this.tweens.add({
+            targets: flyingCoin,
+            y: startPos.y - 150,
+            scale: COIN_SCALE,
+            angle: 720,
+            duration: 350,
+            ease: 'Cubic.easeOut',
+            onComplete: () => {
+                this.tweens.add({
+                    targets: flyingCoin,
+                    alpha: 0,
+                    duration: 150,
+                    ease: 'Linear',
+                    onComplete: () => flyingCoin.destroy()
+                });
+            }
+        });
+
+        // --- Animación 2: Texto del multiplicador volando ---
+        // CAMBIO: El texto ahora comienza 70px más arriba.
+        const flyingText = this.add.text(startPos.x, startPos.y - 70, `x${multiplierValue}`, labelStyle)
+            .setOrigin(0.5)
+            .setDepth(200);
+
+        this.tweens.add({
+            targets: flyingText,
+            x: this.multText.x + this.cam.scrollX,
+            y: this.multText.y,
+            scale: 0.2,
+            alpha: 0,
+            duration: 500, // CAMBIO: Duración reducida para que llegue más rápido.
+            ease: 'Cubic.easeIn',
+            onComplete: () => {
+                flyingText.destroy();
+                this.updateMultiplier(BASE_MULTIPLIER * this.currentLane);
+                this.tweens.add({
+                    targets: this.multText,
+                    scale: 1.25,
+                    duration: 100,
+                    yoyo: true,
+                    ease: 'Cubic.easeInOut'
+                });
+            }
+        });
+    }
+
+    crashCoin(index) {
+        const coin = this.coins[index];
+        if (!coin) return;
+        this.tweens.killTweensOf(coin.container);
+        this.tweens.add({
+            targets: coin.container, y: CANVAS_H + 150, angle: -720, duration: 300, ease: 'Cubic.easeIn',
+            onComplete: () => coin.container.destroy()
+        });
+        this.coins[index] = null;
+    }
+
+    spawnCar() {
+        if (this.gameEnded) return;
+        const activeLanes = new Set(this.carPool.getChildren().filter(c => c.active).map(c => c.getData('lane')));
+        const availableLanes = [...Array(LANE_COUNT).keys()].filter(i => i > 0 && i !== this.currentLane && i !== this.currentLane + 1 && !activeLanes.has(i) && this.laneOpen[i]);
+        Phaser.Utils.Array.Shuffle(availableLanes).slice(0, 3).forEach(laneIndex => {
+            const car = this.getCar();
+            if (!car) return;
+            car.setTexture(Phaser.Utils.Array.GetRandom(['car1', 'car2', 'car3']));
+            car.setData('lane', laneIndex);
+            car.setPosition(LANE_X[laneIndex], -120);
+            this.tweens.add({
+                targets: car, y: CANVAS_H + 120, duration: Phaser.Math.Between(600, 900), ease: 'Linear',
+                onComplete: () => { car.setData('lane', null); this.carPool.killAndHide(car); }
+            });
+        });
+    }
+
+    spawnCrashCar(laneIndex) {
+        const car = this.add.sprite(LANE_X[laneIndex], -150, Phaser.Utils.Array.GetRandom(['car1', 'car2', 'car3'])).setScale(CAR_SCALE).setDepth(8);
+        const hitY = this.grandpa.y + 25;
+        const duration = JUMP_DURATION + 400;
+        this.tweens.add({
+            targets: car, y: CANVAS_H + 150, duration: duration, ease: 'Linear',
+            onUpdate: () => { if (!this.gameEnded && car.y >= hitY) this.crashGrandpa(); },
+            onComplete: () => car.destroy()
+        });
+    }
+
+    getCar() {
+        let car = this.carPool.getFirstDead();
+        if (!car) {
+            if (this.carPool.getLength() < this.carPool.maxSize) car = this.carPool.create(0, 0, 'car1').setScale(CAR_SCALE).setDepth(6);
+            else return null;
+        }
+        car.setActive(true).setVisible(true);
+        return car;
+    }
+}
+
+new Phaser.Game({
+    type: Phaser.AUTO,
+    width: CANVAS_W,
+    height: CANVAS_H,
+    backgroundColor: '#333',
+    scene: [MainScene],
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    }
+});
+
+}
+</script>
+</body>
+</html>
