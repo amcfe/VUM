@@ -1,0 +1,230 @@
+{
+	"textures": [
+		{
+			"image": "jump.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 894,
+				"h": 1361
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "__old_lady_purple_dress_jump_004.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 36,
+						"y": 29,
+						"w": 448,
+						"h": 344
+					},
+					"frame": {
+						"x": 2,
+						"y": 2,
+						"w": 448,
+						"h": 344
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_jump_005.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 35,
+						"y": 32,
+						"w": 438,
+						"h": 330
+					},
+					"frame": {
+						"x": 454,
+						"y": 2,
+						"w": 438,
+						"h": 330
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_jump_006.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 29,
+						"y": 36,
+						"w": 405,
+						"h": 319
+					},
+					"frame": {
+						"x": 454,
+						"y": 336,
+						"w": 405,
+						"h": 319
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_jump_007.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 51,
+						"y": 81,
+						"w": 335,
+						"h": 321
+					},
+					"frame": {
+						"x": 2,
+						"y": 350,
+						"w": 335,
+						"h": 321
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_jump_003.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 61,
+						"y": 72,
+						"w": 303,
+						"h": 370
+					},
+					"frame": {
+						"x": 341,
+						"y": 659,
+						"w": 303,
+						"h": 370
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_jump_000.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 122,
+						"y": 103,
+						"w": 241,
+						"h": 348
+					},
+					"frame": {
+						"x": 648,
+						"y": 659,
+						"w": 241,
+						"h": 348
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_jump_002.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 118,
+						"y": 123,
+						"w": 238,
+						"h": 326
+					},
+					"frame": {
+						"x": 2,
+						"y": 1033,
+						"w": 238,
+						"h": 326
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_jump_008.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 120,
+						"y": 124,
+						"w": 235,
+						"h": 326
+					},
+					"frame": {
+						"x": 244,
+						"y": 1033,
+						"w": 235,
+						"h": 326
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_jump_001.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 120,
+						"y": 125,
+						"w": 235,
+						"h": 325
+					},
+					"frame": {
+						"x": 483,
+						"y": 1033,
+						"w": 235,
+						"h": 325
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_jump_009.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 117,
+						"y": 114,
+						"w": 238,
+						"h": 340
+					},
+					"frame": {
+						"x": 2,
+						"y": 675,
+						"w": 238,
+						"h": 340
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:355f559f367c54f33014372284d40dfe:f0030848593060011f527a12eb75ff0f:56c9fa24931e40777fe0ddacfe328adf$"
+	}
+}

@@ -1,0 +1,440 @@
+{
+	"textures": [
+		{
+			"image": "idle.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 1012,
+				"h": 1779
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "__old_lady_purple_dress_idle_010.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 107,
+						"y": 98,
+						"w": 256,
+						"h": 353
+					},
+					"frame": {
+						"x": 2,
+						"y": 2,
+						"w": 256,
+						"h": 353
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_009.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 109,
+						"y": 99,
+						"w": 254,
+						"h": 352
+					},
+					"frame": {
+						"x": 2,
+						"y": 359,
+						"w": 254,
+						"h": 352
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_011.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 109,
+						"y": 99,
+						"w": 254,
+						"h": 352
+					},
+					"frame": {
+						"x": 2,
+						"y": 715,
+						"w": 254,
+						"h": 352
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_008.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 110,
+						"y": 99,
+						"w": 253,
+						"h": 352
+					},
+					"frame": {
+						"x": 2,
+						"y": 1071,
+						"w": 253,
+						"h": 352
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_012.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 110,
+						"y": 99,
+						"w": 253,
+						"h": 352
+					},
+					"frame": {
+						"x": 259,
+						"y": 1071,
+						"w": 253,
+						"h": 352
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_007.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 111,
+						"y": 100,
+						"w": 252,
+						"h": 351
+					},
+					"frame": {
+						"x": 260,
+						"y": 359,
+						"w": 252,
+						"h": 351
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_013.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 112,
+						"y": 100,
+						"w": 251,
+						"h": 351
+					},
+					"frame": {
+						"x": 262,
+						"y": 2,
+						"w": 251,
+						"h": 351
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_006.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 114,
+						"y": 100,
+						"w": 249,
+						"h": 351
+					},
+					"frame": {
+						"x": 260,
+						"y": 714,
+						"w": 249,
+						"h": 351
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_014.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 114,
+						"y": 100,
+						"w": 249,
+						"h": 351
+					},
+					"frame": {
+						"x": 513,
+						"y": 714,
+						"w": 249,
+						"h": 351
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_005.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 115,
+						"y": 101,
+						"w": 248,
+						"h": 350
+					},
+					"frame": {
+						"x": 516,
+						"y": 357,
+						"w": 248,
+						"h": 350
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_015.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 115,
+						"y": 101,
+						"w": 248,
+						"h": 350
+					},
+					"frame": {
+						"x": 517,
+						"y": 2,
+						"w": 248,
+						"h": 350
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_004.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 117,
+						"y": 101,
+						"w": 246,
+						"h": 350
+					},
+					"frame": {
+						"x": 516,
+						"y": 1069,
+						"w": 246,
+						"h": 350
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_016.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 117,
+						"y": 101,
+						"w": 246,
+						"h": 350
+					},
+					"frame": {
+						"x": 516,
+						"y": 1423,
+						"w": 246,
+						"h": 350
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_003.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 118,
+						"y": 101,
+						"w": 245,
+						"h": 350
+					},
+					"frame": {
+						"x": 2,
+						"y": 1427,
+						"w": 245,
+						"h": 350
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_017.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 118,
+						"y": 101,
+						"w": 245,
+						"h": 350
+					},
+					"frame": {
+						"x": 251,
+						"y": 1427,
+						"w": 245,
+						"h": 350
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_002.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 119,
+						"y": 102,
+						"w": 244,
+						"h": 349
+					},
+					"frame": {
+						"x": 766,
+						"y": 711,
+						"w": 244,
+						"h": 349
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_001.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 121,
+						"y": 102,
+						"w": 242,
+						"h": 349
+					},
+					"frame": {
+						"x": 768,
+						"y": 356,
+						"w": 242,
+						"h": 349
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_000.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 122,
+						"y": 103,
+						"w": 241,
+						"h": 348
+					},
+					"frame": {
+						"x": 769,
+						"y": 2,
+						"w": 241,
+						"h": 348
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_018.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 119,
+						"y": 102,
+						"w": 244,
+						"h": 349
+					},
+					"frame": {
+						"x": 766,
+						"y": 1064,
+						"w": 244,
+						"h": 349
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_idle_019.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 121,
+						"y": 102,
+						"w": 242,
+						"h": 349
+					},
+					"frame": {
+						"x": 766,
+						"y": 1417,
+						"w": 242,
+						"h": 349
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:0fd440fa425f8359f6a5ef053304ab7a:2b57526cf03e8ab71eeb5e8c5141d4da:585717d7804995c87573698b70e44cb4$"
+	}
+}

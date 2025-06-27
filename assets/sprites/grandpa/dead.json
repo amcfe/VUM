@@ -1,0 +1,356 @@
+{
+	"textures": [
+		{
+			"image": "dead.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 1563,
+				"h": 1608
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "__old_lady_purple_dress_whacked_006.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 48,
+						"y": 89,
+						"w": 403,
+						"h": 398
+					},
+					"frame": {
+						"x": 2,
+						"y": 2,
+						"w": 403,
+						"h": 398
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_whacked_007.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 56,
+						"y": 89,
+						"w": 395,
+						"h": 398
+					},
+					"frame": {
+						"x": 2,
+						"y": 404,
+						"w": 395,
+						"h": 398
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_whacked_005.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 57,
+						"y": 89,
+						"w": 394,
+						"h": 398
+					},
+					"frame": {
+						"x": 2,
+						"y": 806,
+						"w": 394,
+						"h": 398
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_whacked_008.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 57,
+						"y": 89,
+						"w": 394,
+						"h": 398
+					},
+					"frame": {
+						"x": 2,
+						"y": 1208,
+						"w": 394,
+						"h": 398
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_whacked_000.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 60,
+						"y": 89,
+						"w": 391,
+						"h": 398
+					},
+					"frame": {
+						"x": 400,
+						"y": 806,
+						"w": 391,
+						"h": 398
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_whacked_001.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 64,
+						"y": 89,
+						"w": 387,
+						"h": 398
+					},
+					"frame": {
+						"x": 401,
+						"y": 404,
+						"w": 387,
+						"h": 398
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_whacked_004.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 64,
+						"y": 89,
+						"w": 387,
+						"h": 398
+					},
+					"frame": {
+						"x": 409,
+						"y": 2,
+						"w": 387,
+						"h": 398
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_whacked_003.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 66,
+						"y": 89,
+						"w": 385,
+						"h": 398
+					},
+					"frame": {
+						"x": 792,
+						"y": 404,
+						"w": 385,
+						"h": 398
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_whacked_011.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 66,
+						"y": 89,
+						"w": 385,
+						"h": 398
+					},
+					"frame": {
+						"x": 800,
+						"y": 2,
+						"w": 385,
+						"h": 398
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_whacked_010.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 67,
+						"y": 89,
+						"w": 384,
+						"h": 398
+					},
+					"frame": {
+						"x": 400,
+						"y": 1208,
+						"w": 384,
+						"h": 398
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_whacked_002.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 68,
+						"y": 89,
+						"w": 383,
+						"h": 398
+					},
+					"frame": {
+						"x": 788,
+						"y": 1208,
+						"w": 383,
+						"h": 398
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_whacked_012.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 70,
+						"y": 89,
+						"w": 381,
+						"h": 398
+					},
+					"frame": {
+						"x": 795,
+						"y": 806,
+						"w": 381,
+						"h": 398
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_whacked_015.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 70,
+						"y": 89,
+						"w": 381,
+						"h": 398
+					},
+					"frame": {
+						"x": 1175,
+						"y": 1208,
+						"w": 381,
+						"h": 398
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_whacked_009.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 72,
+						"y": 89,
+						"w": 379,
+						"h": 398
+					},
+					"frame": {
+						"x": 1180,
+						"y": 806,
+						"w": 379,
+						"h": 398
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_whacked_013.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 77,
+						"y": 89,
+						"w": 374,
+						"h": 398
+					},
+					"frame": {
+						"x": 1181,
+						"y": 404,
+						"w": 374,
+						"h": 398
+					}
+				},
+				{
+					"filename": "__old_lady_purple_dress_whacked_014.png",
+					"rotated": false,
+					"trimmed": true,
+					"sourceSize": {
+						"w": 512,
+						"h": 512
+					},
+					"spriteSourceSize": {
+						"x": 79,
+						"y": 89,
+						"w": 372,
+						"h": 398
+					},
+					"frame": {
+						"x": 1189,
+						"y": 2,
+						"w": 372,
+						"h": 398
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:7e32bbed2df007a14ae2a711b15e69d3:f9cb25a1e01b834b7e189003f3b4dfa9:6525ed62030b51131fca56775fe5741d$"
+	}
+}

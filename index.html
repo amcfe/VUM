@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Vision Uncrossable V0.3.9 (Ajustes Finos)</title>
+    <title>Vision Uncrossable V0.4.1 (Mobile UX Improv.)</title>
     <link rel="preload" href="assets/readson.woff2" as="font" type="font/woff2" crossorigin>
     <style>
         @font-face {
@@ -27,30 +27,31 @@
     }
 })();
 
-// ===== VARIABLES GLOBALES =================================================
+function startGame() {
+
+// --- Global Variables ---
 var SHOW_WIN_BANNER = false;
 var WIN_AMOUNT_TEXT = '';
 var PLAYER_BALANCE = 1000;
 var CURRENT_BET_INDEX = 4;
 
-function startGame() {
-
-// ===== CONSTANTES DEL JUEGO =============================================
+// --- Game Constants ---
 const CANVAS_W = 1080;
 const CANVAS_H = 1920;
 const GAME_AREA_H = 1450;
 const UI_AREA_H = 470;
+const UI_Y_OFFSET = 80; // <-- NUEVO: Desplazamiento vertical para la UI.
 const STREET_WIDTH = 340; 
 const SIDEWALK_WIDTH = 400; 
 const LANE_COUNT = 25;
 const WORLD_WIDTH = SIDEWALK_WIDTH + STREET_WIDTH * (LANE_COUNT - 1);
-const GRANDPA_SCALE = 400 / 512;
+const GRANDPA_SCALE = 1;
 const CAR_SCALE = 1.4;
 const COIN_SCALE = 1.2;
 const BASE_MULTIPLIER = 1.9;
 const HIT_CHANCE = 0.25;
-const JUMP_HEIGHT = 360;
-const JUMP_DURATION = 400;
+const JUMP_HEIGHT = 200;
+const JUMP_DURATION = 600;
 const SHADOW_OFFSET = 180;
 const BET_VALUES = [0.2, 0.4, 0.6, 1, 2, 5, 10, 100, 500, 1000];
 const LANE_X = Array.from({ length: LANE_COUNT }, (_, i) =>
@@ -59,12 +60,19 @@ const LANE_X = Array.from({ length: LANE_COUNT }, (_, i) =>
 
 class MainScene extends Phaser.Scene {
 
+    // --- Scene Lifecycle ---
+
     preload() {
-        const assets = ['grandpa', 'grandpadead', 'sidewalk', 'street', 'car1', 'car2', 'car3', 'pilar', 'coin'];
+        const assets = ['sidewalk', 'street', 'car1', 'car2', 'car3', 'pilar', 'coin'];
         assets.forEach(key => this.load.image(key, `assets/${key}.png`));
+
+        this.load.atlas('grandpa_idle', 'assets/sprites/grandpa/idle.png', 'assets/sprites/grandpa/idle.json');
+        this.load.atlas('grandpa_jump', 'assets/sprites/grandpa/jump.png', 'assets/sprites/grandpa/jump.json');
+        this.load.atlas('grandpa_dead', 'assets/sprites/grandpa/dead.png', 'assets/sprites/grandpa/dead.json');
     }
 
     create() {
+        // --- State Initialization ---
         this.currentLane = 0;
         this.gameEnded = false;
         this.pendingLose = false;
@@ -79,22 +87,25 @@ class MainScene extends Phaser.Scene {
         this.playerBalance = PLAYER_BALANCE;
         this.currentBetIndex = CURRENT_BET_INDEX;
         this.activeBetValue = 0;
+        
+        // --- Animation Setup ---
+        this.setupAnimations();
 
+        // --- World & Game Objects ---
         this.createWorld();
-
         const startX = LANE_X[0];
         const startY = GAME_AREA_H / 2;
-        this.grandpa = this.add.sprite(startX, startY, 'grandpa').setScale(GRANDPA_SCALE).setDepth(10);
+        this.grandpa = this.add.sprite(startX, startY, 'grandpa_idle').setScale(GRANDPA_SCALE).setDepth(10);
+        this.grandpa.play('idle_anim');
         this.shadow = this.add.ellipse(startX, startY + SHADOW_OFFSET, 130, 70, 0x000, 0.25).setDepth(5);
-
         this.multText = this.add.text(CANVAS_W / 2, 50, 'x1.00', { fontFamily: 'Readson', fontSize: '64px', color: '#fff', stroke: '#000', strokeThickness: 3 })
             .setOrigin(0.5).setScrollFactor(0).setDepth(100);
-
         this.createCoins();
+        
+        // --- Systems & Controls ---
         this._initCameraSystem();
         this._initDragControls();
         this.createUi();
-
         this.input.keyboard.on('keydown-SPACE', () => this.jump());
         this.carPool = this.add.group({ classType: Phaser.GameObjects.Sprite, maxSize: 40 });
         this.carTimer = this.time.addEvent({ delay: 450, loop: true, callback: this.spawnCar, callbackScope: this });
@@ -113,6 +124,8 @@ class MainScene extends Phaser.Scene {
         }
     }
 
+    // --- Core Gameplay Logic ---
+
     jump() {
         if (this.winBanner) this.winBanner.fadeOutFunc();
         if (this.isWaitingToRestart) { this.skipToFade(); return; }
@@ -126,6 +139,8 @@ class MainScene extends Phaser.Scene {
             this._updateBalanceDisplay();
             this._setBetButtonsEnabled(false);
         }
+
+        this.grandpa.play('jump_anim');
 
         if (Math.random() < HIT_CHANCE) {
             this.pendingLose = true;
@@ -160,7 +175,8 @@ class MainScene extends Phaser.Scene {
     afterLand() {
         this.isMoving = false;
         if (this.pendingLose) return;
-
+        
+        this.grandpa.play('idle_anim');
         this.currentLane++;
 
         if (this.laneOpen[this.currentLane]) {
@@ -183,7 +199,8 @@ class MainScene extends Phaser.Scene {
         this.gameEnded = true;
         this.carTimer.remove();
         this._lockCameraOnGameEnd();
-        this.grandpa.setTexture('grandpadead');
+        this.grandpa.play('dead_anim');
+
         this.updateMultiplier(0);
         if (this.crashLaneIdx !== null) this.crashCoin(this.crashLaneIdx);
         this.cashBtn.setVisible(false);
@@ -193,7 +210,6 @@ class MainScene extends Phaser.Scene {
         this.restartTimer = this.time.delayedCall(1800, () => {
             if (!this.isWaitingToRestart) return;
             this.isWaitingToRestart = false;
-            // CAMBIO: Fade más rápido al perder.
             this.cam.fadeOut(150, 0, 0, 0);
         });
         this.cam.on('camerafadeoutcomplete', () => this.scene.restart());
@@ -203,7 +219,6 @@ class MainScene extends Phaser.Scene {
         if (!this.isWaitingToRestart) return;
         this.isWaitingToRestart = false;
         if (this.restartTimer) this.restartTimer.remove();
-        // CAMBIO: Fade más rápido al skipear.
         this.cam.fadeOut(150, 0, 0, 0);
     }
 
@@ -219,6 +234,35 @@ class MainScene extends Phaser.Scene {
         this.scene.restart();
     }
 
+    // --- Creation & Setup ---
+
+    setupAnimations() {
+        if (!this.anims.exists('idle_anim')) {
+            this.anims.create({
+                key: 'idle_anim',
+                frames: this.anims.generateFrameNames('grandpa_idle', { prefix: '__old_lady_purple_dress_idle_', start: 0, end: 19, zeroPad: 3, suffix: '.png' }),
+                frameRate: 24,
+                repeat: -1
+            });
+        }
+        if (!this.anims.exists('jump_anim')) {
+            this.anims.create({
+                key: 'jump_anim',
+                frames: this.anims.generateFrameNames('grandpa_jump', { prefix: '__old_lady_purple_dress_jump_', start: 0, end: 9, zeroPad: 3, suffix: '.png' }),
+                frameRate: 24,
+                repeat: 0
+            });
+        }
+        if (!this.anims.exists('dead_anim')) {
+            this.anims.create({
+                key: 'dead_anim',
+                frames: this.anims.generateFrameNames('grandpa_dead', { prefix: '__old_lady_purple_dress_whacked_', start: 0, end: 15, zeroPad: 3, suffix: '.png' }),
+                frameRate: 24,
+                repeat: -1
+            });
+        }
+    }
+    
     createWorld() {
         for (let i = 0, x = 0; i < LANE_COUNT; i++) {
             const width = i ? STREET_WIDTH : SIDEWALK_WIDTH;
@@ -244,28 +288,43 @@ class MainScene extends Phaser.Scene {
     }
 
     createUi() {
-        const uiY = GAME_AREA_H + (UI_AREA_H / 2);
+        // --- UI Positioning ---
+        const uiAreaY = GAME_AREA_H + (UI_AREA_H / 2) - UI_Y_OFFSET;
         const uiTextStyle = { fontFamily: 'Readson', fontSize: '42px', color: '#fff', stroke: '#000', strokeThickness: 2 };
-        this.add.text(60, uiY - 140, 'BALANCE', uiTextStyle).setOrigin(0, 0.5).setScrollFactor(0).setDepth(100);
-        this.balanceText = this.add.text(60, uiY - 95, '$0.00', uiTextStyle).setOrigin(0, 0.5).setScrollFactor(0).setDepth(100);
+
+        // --- Drag Blocker ---
+        const uiBlocker = this.add.zone(CANVAS_W / 2, uiAreaY, CANVAS_W, UI_AREA_H)
+            .setScrollFactor(0)
+            .setInteractive()
+            .setDepth(99);
+
+        // --- UI Elements ---
+        this.add.text(60, uiAreaY - 140, 'BALANCE', uiTextStyle).setOrigin(0, 0.5).setScrollFactor(0).setDepth(100);
+        this.balanceText = this.add.text(60, uiAreaY - 95, '$0.00', uiTextStyle).setOrigin(0, 0.5).setScrollFactor(0).setDepth(100);
+        
         const jumpBtnColors = { bg: 0x006400, stroke: 0x98FB98, hover: 0x008000 };
         const jumpBtnStyle = { fontFamily: 'Readson', fontSize: '56px', color: '#ffffff' };
-        this.jumpBtn = this._createButton(CANVAS_W / 2, uiY + 80, 'JUMP', 300, 110, jumpBtnColors, jumpBtnStyle, () => this.jump());
+        this.jumpBtn = this._createButton(CANVAS_W / 2, uiAreaY + 80, 'JUMP', 300, 110, jumpBtnColors, jumpBtnStyle, () => this.jump());
         this.jumpBtnBreathingTween = this.tweens.add({ targets: this.jumpBtn, scale: 1.05, duration: 1500, ease: 'Sine.easeInOut', yoyo: true, repeat: -1 });
+
         const cashBtnColors = { bg: 0x333333, stroke: 0xeeeeee, hover: 0x555555 };
         const cashBtnStyle = { fontFamily: 'Readson', fontSize: '38px', color: '#ffffff', align: 'center', lineSpacing: 5 };
-        this.cashBtn = this._createButton(CANVAS_W / 2, uiY - 50, '💰\nCASH OUT', 220, 100, cashBtnColors, cashBtnStyle, () => this.triggerWin());
+        this.cashBtn = this._createButton(CANVAS_W / 2, uiAreaY - 50, '💰\nCASH OUT', 220, 100, cashBtnColors, cashBtnStyle, () => this.triggerWin());
         this.cashBtn.setVisible(false);
+
         const betTextX = CANVAS_W - 170;
         const betBtnColors = { bg: 0x4a4a4a, stroke: 0xcccccc, hover: 0x6a6a6a };
         const betBtnStyle = { fontFamily: 'Readson', fontSize: '60px', color: '#fff' };
-        this.add.text(betTextX, uiY - 140, 'BET', uiTextStyle).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(100);
-        this.betSizeText = this.add.text(betTextX, uiY - 95, '$0.00', uiTextStyle).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(100);
-        this.betDownBtn = this._createButton(betTextX - 120, uiY - 95, '-', 80, 80, betBtnColors, betBtnStyle, () => this._decreaseBet());
-        this.betUpBtn = this._createButton(betTextX + 120, uiY - 95, '+', 80, 80, betBtnColors, betBtnStyle, () => this._increaseBet());
+        this.add.text(betTextX, uiAreaY - 140, 'BET', uiTextStyle).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(100);
+        this.betSizeText = this.add.text(betTextX, uiAreaY - 95, '$0.00', uiTextStyle).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(100);
+        this.betDownBtn = this._createButton(betTextX - 120, uiAreaY - 95, '-', 80, 80, betBtnColors, betBtnStyle, () => this._decreaseBet());
+        this.betUpBtn = this._createButton(betTextX + 120, uiAreaY - 95, '+', 80, 80, betBtnColors, betBtnStyle, () => this._increaseBet());
+
         this._updateBalanceDisplay();
         this._updateBetDisplay();
     }
+
+    // --- UI & Object Management ---
 
     _createButton(x, y, text, w, h, colors, fontStyle, callback) {
         const container = this.add.container(x, y).setScrollFactor(0).setDepth(100);
@@ -339,6 +398,112 @@ class MainScene extends Phaser.Scene {
         const warningText = this.add.text(CANVAS_W / 2, CANVAS_H / 2, 'Not Enough Balance', { fontFamily: 'Readson', fontSize: '70px', color: '#ff4d4d', stroke: '#000', strokeThickness: 4, align: 'center' }).setOrigin(0.5).setScrollFactor(0).setDepth(300).setAlpha(0);
         this.tweens.add({ targets: warningText, alpha: { from: 0, to: 1 }, scale: { from: 0.8, to: 1 }, duration: 300, yoyo: true, hold: 1200, ease: 'Power1', onComplete: () => warningText.destroy() });
     }
+    
+    updateMultiplier(value) { this.multText.setText('x' + value.toFixed(2)); }
+
+    updateCoinHighlights() {
+        const nextLane = this.currentLane + 1;
+        for (let i = 1; i < this.coins.length; i++) {
+            const coin = this.coins[i];
+            if (!coin) continue;
+            if (nextLane === i) coin.sprite.clearTint();
+            else coin.sprite.setTint(0x777777);
+        }
+    }
+
+    raisePilar(index) {
+        const pilar = this.add.image(LANE_X[index], this.grandpa.y - 80, 'pilar').setDepth(7);
+        this.tweens.add({ targets: pilar, y: pilar.y - 40, duration: 260, ease: 'Back.easeOut' });
+    }
+
+    collectCoin(index) {
+        const coinData = this.coins[index];
+        if (!coinData) return;
+
+        const startPos = { x: coinData.container.x, y: coinData.container.y };
+        const multiplierValue = (BASE_MULTIPLIER * index).toFixed(2);
+        const labelStyle = { fontFamily: 'Readson', fontSize: '42px', color: '#fff', stroke: '#000', strokeThickness: 3 };
+        
+        this.tweens.killTweensOf(coinData.container);
+        coinData.container.destroy();
+        this.coins[index] = null;
+
+        const flyingCoin = this.add.sprite(startPos.x, startPos.y - 50, 'coin').setScale(COIN_SCALE * 0.8).setDepth(12);
+        this.tweens.add({
+            targets: flyingCoin, y: startPos.y - 150, scale: COIN_SCALE, angle: 720, duration: 350, ease: 'Cubic.easeOut',
+            onComplete: () => {
+                this.tweens.add({
+                    targets: flyingCoin, alpha: 0, duration: 150, ease: 'Linear',
+                    onComplete: () => flyingCoin.destroy()
+                });
+            }
+        });
+
+        const flyingText = this.add.text(startPos.x, startPos.y - 70, `x${multiplierValue}`, labelStyle).setOrigin(0.5).setDepth(200);
+        this.tweens.add({
+            targets: flyingText, x: this.multText.x + this.cam.scrollX, y: this.multText.y, scale: 0.2, alpha: 0, duration: 500, ease: 'Cubic.easeIn',
+            onComplete: () => {
+                flyingText.destroy();
+                this.updateMultiplier(BASE_MULTIPLIER * this.currentLane);
+                this.tweens.add({
+                    targets: this.multText, scale: 1.25, duration: 100, yoyo: true, ease: 'Cubic.easeInOut'
+                });
+            }
+        });
+    }
+
+    crashCoin(index) {
+        const coin = this.coins[index];
+        if (!coin) return;
+        this.tweens.killTweensOf(coin.container);
+        this.tweens.add({
+            targets: coin.container, y: CANVAS_H + 150, angle: -720, duration: 300, ease: 'Cubic.easeIn',
+            onComplete: () => coin.container.destroy()
+        });
+        this.coins[index] = null;
+    }
+
+    // --- Car Spawning System ---
+
+    spawnCar() {
+        if (this.gameEnded) return;
+        const activeLanes = new Set(this.carPool.getChildren().filter(c => c.active).map(c => c.getData('lane')));
+        const availableLanes = [...Array(LANE_COUNT).keys()].filter(i => i > 0 && i !== this.currentLane && i !== this.currentLane + 1 && !activeLanes.has(i) && this.laneOpen[i]);
+        Phaser.Utils.Array.Shuffle(availableLanes).slice(0, 3).forEach(laneIndex => {
+            const car = this.getCarFromPool();
+            if (!car) return;
+            car.setTexture(Phaser.Utils.Array.GetRandom(['car1', 'car2', 'car3']));
+            car.setData('lane', laneIndex);
+            car.setPosition(LANE_X[laneIndex], -120);
+            this.tweens.add({
+                targets: car, y: CANVAS_H + 120, duration: Phaser.Math.Between(600, 900), ease: 'Linear',
+                onComplete: () => { car.setData('lane', null); this.carPool.killAndHide(car); }
+            });
+        });
+    }
+
+    spawnCrashCar(laneIndex) {
+        const car = this.add.sprite(LANE_X[laneIndex], -150, Phaser.Utils.Array.GetRandom(['car1', 'car2', 'car3'])).setScale(CAR_SCALE).setDepth(8);
+        const hitY = this.grandpa.y + 25;
+        const duration = JUMP_DURATION + 400;
+        this.tweens.add({
+            targets: car, y: CANVAS_H + 150, duration: duration, ease: 'Linear',
+            onUpdate: () => { if (!this.gameEnded && car.y >= hitY) this.crashGrandpa(); },
+            onComplete: () => car.destroy()
+        });
+    }
+
+    getCarFromPool() {
+        let car = this.carPool.getFirstDead();
+        if (!car) {
+            if (this.carPool.getLength() < this.carPool.maxSize) car = this.carPool.create(0, 0, 'car1').setScale(CAR_SCALE).setDepth(6);
+            else return null;
+        }
+        car.setActive(true).setVisible(true);
+        return car;
+    }
+
+    // --- Camera System ---
 
     _initCameraSystem() {
         this.cam = this.cameras.main;
@@ -396,135 +561,9 @@ class MainScene extends Phaser.Scene {
         const targetX = this.grandpa.x - CANVAS_W / 2;
         this.tweens.add({ targets: this.cam, scrollX: targetX, duration: 600, ease: 'Cubic.easeOut' });
     }
-
-    updateMultiplier(value) { this.multText.setText('x' + value.toFixed(2)); }
-
-    updateCoinHighlights() {
-        const nextLane = this.currentLane + 1;
-        for (let i = 1; i < this.coins.length; i++) {
-            const coin = this.coins[i];
-            if (!coin) continue;
-            if (nextLane === i) coin.sprite.clearTint();
-            else coin.sprite.setTint(0x777777);
-        }
-    }
-
-    raisePilar(index) {
-        const pilar = this.add.image(LANE_X[index], this.grandpa.y - 80, 'pilar').setDepth(7);
-        this.tweens.add({ targets: pilar, y: pilar.y - 40, duration: 260, ease: 'Back.easeOut' });
-    }
-
-    collectCoin(index) {
-        const coinData = this.coins[index];
-        if (!coinData) return;
-
-        const startPos = { x: coinData.container.x, y: coinData.container.y };
-        const multiplierValue = (BASE_MULTIPLIER * index).toFixed(2);
-        const labelStyle = { fontFamily: 'Readson', fontSize: '42px', color: '#fff', stroke: '#000', strokeThickness: 3 };
-        
-        this.tweens.killTweensOf(coinData.container);
-        coinData.container.destroy();
-        this.coins[index] = null;
-
-        // --- Animación 1: Moneda girando ---
-        // CAMBIO: La moneda ahora comienza 50px más arriba.
-        const flyingCoin = this.add.sprite(startPos.x, startPos.y - 50, 'coin').setScale(COIN_SCALE * 0.8).setDepth(12);
-        this.tweens.add({
-            targets: flyingCoin,
-            y: startPos.y - 150,
-            scale: COIN_SCALE,
-            angle: 720,
-            duration: 350,
-            ease: 'Cubic.easeOut',
-            onComplete: () => {
-                this.tweens.add({
-                    targets: flyingCoin,
-                    alpha: 0,
-                    duration: 150,
-                    ease: 'Linear',
-                    onComplete: () => flyingCoin.destroy()
-                });
-            }
-        });
-
-        // --- Animación 2: Texto del multiplicador volando ---
-        // CAMBIO: El texto ahora comienza 70px más arriba.
-        const flyingText = this.add.text(startPos.x, startPos.y - 70, `x${multiplierValue}`, labelStyle)
-            .setOrigin(0.5)
-            .setDepth(200);
-
-        this.tweens.add({
-            targets: flyingText,
-            x: this.multText.x + this.cam.scrollX,
-            y: this.multText.y,
-            scale: 0.2,
-            alpha: 0,
-            duration: 500, // CAMBIO: Duración reducida para que llegue más rápido.
-            ease: 'Cubic.easeIn',
-            onComplete: () => {
-                flyingText.destroy();
-                this.updateMultiplier(BASE_MULTIPLIER * this.currentLane);
-                this.tweens.add({
-                    targets: this.multText,
-                    scale: 1.25,
-                    duration: 100,
-                    yoyo: true,
-                    ease: 'Cubic.easeInOut'
-                });
-            }
-        });
-    }
-
-    crashCoin(index) {
-        const coin = this.coins[index];
-        if (!coin) return;
-        this.tweens.killTweensOf(coin.container);
-        this.tweens.add({
-            targets: coin.container, y: CANVAS_H + 150, angle: -720, duration: 300, ease: 'Cubic.easeIn',
-            onComplete: () => coin.container.destroy()
-        });
-        this.coins[index] = null;
-    }
-
-    spawnCar() {
-        if (this.gameEnded) return;
-        const activeLanes = new Set(this.carPool.getChildren().filter(c => c.active).map(c => c.getData('lane')));
-        const availableLanes = [...Array(LANE_COUNT).keys()].filter(i => i > 0 && i !== this.currentLane && i !== this.currentLane + 1 && !activeLanes.has(i) && this.laneOpen[i]);
-        Phaser.Utils.Array.Shuffle(availableLanes).slice(0, 3).forEach(laneIndex => {
-            const car = this.getCar();
-            if (!car) return;
-            car.setTexture(Phaser.Utils.Array.GetRandom(['car1', 'car2', 'car3']));
-            car.setData('lane', laneIndex);
-            car.setPosition(LANE_X[laneIndex], -120);
-            this.tweens.add({
-                targets: car, y: CANVAS_H + 120, duration: Phaser.Math.Between(600, 900), ease: 'Linear',
-                onComplete: () => { car.setData('lane', null); this.carPool.killAndHide(car); }
-            });
-        });
-    }
-
-    spawnCrashCar(laneIndex) {
-        const car = this.add.sprite(LANE_X[laneIndex], -150, Phaser.Utils.Array.GetRandom(['car1', 'car2', 'car3'])).setScale(CAR_SCALE).setDepth(8);
-        const hitY = this.grandpa.y + 25;
-        const duration = JUMP_DURATION + 400;
-        this.tweens.add({
-            targets: car, y: CANVAS_H + 150, duration: duration, ease: 'Linear',
-            onUpdate: () => { if (!this.gameEnded && car.y >= hitY) this.crashGrandpa(); },
-            onComplete: () => car.destroy()
-        });
-    }
-
-    getCar() {
-        let car = this.carPool.getFirstDead();
-        if (!car) {
-            if (this.carPool.getLength() < this.carPool.maxSize) car = this.carPool.create(0, 0, 'car1').setScale(CAR_SCALE).setDepth(6);
-            else return null;
-        }
-        car.setActive(true).setVisible(true);
-        return car;
-    }
 }
 
+// --- Game Configuration ---
 new Phaser.Game({
     type: Phaser.AUTO,
     width: CANVAS_W,
